@@ -116,10 +116,11 @@
 		loaderMsg.textContent = 'Search face';
 		const predictions = await model.estimateFaces(webcam);
 		const baseCanvas = document.querySelector("#baseCanvas");
-		baseCanvas.width = 1280;
-		baseCanvas.height = 720;
+		baseCanvas.width = window.innerWidth;
+		baseCanvas.height = window.innerHeight;
+
 		const base_ctx = baseCanvas.getContext('2d');
-		base_ctx.drawImage(webcam, 0, 0, 1280, 720);
+		base_ctx.drawImage(webcam, 0, 0, window.innerWidth, window.innerHeight);
 
 		if (predictions.length > 0) {
 			const positionBufferData = predictions[0].scaledMesh.reduce((acc, pos) => acc.concat(pos), []);
@@ -149,8 +150,8 @@
 			webcam.srcObject = stream;
 			await new Promise(function (res) {
 				webcam.onloadedmetadata = function () {
-					w = 1280;
-					h = 720;
+					w = window.innerWidth;
+					h = window.innerHeight;
 					res();
 				}
 			});

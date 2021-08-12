@@ -116,14 +116,10 @@ class FacePaint {
 		this._geometry.attributes.position.needsUpdate = true;
 
 		this._renderer.render(this._scene, this._camera);
-		// const imgData = this._renderer.domElement.toDataURL();
-		// console.log('imgData', imgData)
-		// var img = new Image();
-		// img.src = imgData;
+
 		var gl = this._renderer.getContext();
 		var pixels = new Uint8Array(this._w * this._h * 4);
 		gl.readPixels(0, 0, this._w, this._h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-		console.log(pixels.length); // Uint8Array
 		const srcImageData = toImageData(pixels, this._w, this._h);
 
 		blendImages({
@@ -132,6 +128,7 @@ class FacePaint {
 				height: this._h
 			}
 		});
+
 	}
 
 	constructor({
@@ -147,8 +144,8 @@ class FacePaint {
 		});
 		this._renderer.setPixelRatio(window.devicePixelRatio);
 		this._renderer.setSize(w, h);
-		this._w = 1280;
-		this._h = 720;
+		this._w = w;
+		this._h = h;
 		this._halfW = w * 0.5;
 		this._halfH = h * 0.5;
 		this._textureFilePath = textureFilePath;
@@ -203,6 +200,9 @@ const blendImages = ({
 
 	// const result_ctx = initializeResultCtx(base_pixels, base_size);
 	const resultCanvas = document.querySelector('#resultCanvas');
+	resultCanvas.height = baseCanvas.height;
+	resultCanvas.width = baseCanvas.width;
+
 	const result_ctx = resultCanvas.getContext('2d');
 	var result_pixels = base_pixels;//result_ctx.getImageData(0, 0, base_size.width, base_size.height);
 
@@ -215,7 +215,7 @@ const blendImages = ({
 	var dx, absx, previous_epsilon = 1.0;
 	var cnt = 0;
 	var blend_position_offset = { x: 0, y: 0 };
-	var is_mixing_gradients = false;
+	var is_mixing_gradients = true;
 
 	do {
 		dx = 0; absx = 0;
