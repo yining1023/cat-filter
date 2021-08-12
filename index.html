@@ -13,7 +13,8 @@
   </head>
 
   <body class="ar">
-    <video muted id="webcam" class="visible"></video>
+    <!-- <video muted id="webcam" class="visible"></video> -->
+    <video muted id="webcam"></video>
     <div id="background">
       <!-- <svg width="100%" height="100%">
 			<defs>
@@ -28,7 +29,9 @@
 			<rect x="0" y="0" width="100%" height="100%" stroke="none" fill="url(#pattern-image)" />
 		</svg> -->
     </div>
+    <canvas id="baseCanvas" tabindex="0"></canvas>
     <canvas id="faceCanvas" tabindex="1"></canvas>
+    <canvas id="resultCanvas" tabindex="2"></canvas>
     <div id="loader">
       <svg width="102" height="147" xmlns="http://www.w3.org/2000/svg">
         <g transform="translate(2 3)" fill="none" fill-rule="evenodd">

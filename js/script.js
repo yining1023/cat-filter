@@ -115,6 +115,11 @@
 		requestAnimationFrame(renderPredictions);
 		loaderMsg.textContent = 'Search face';
 		const predictions = await model.estimateFaces(webcam);
+		const baseCanvas = document.querySelector("#baseCanvas");
+		baseCanvas.width = 1280;
+		baseCanvas.height = 720;
+		const base_ctx = baseCanvas.getContext('2d');
+		base_ctx.drawImage(webcam, 0, 0, 1280, 720);
 
 		if (predictions.length > 0) {
 			const positionBufferData = predictions[0].scaledMesh.reduce((acc, pos) => acc.concat(pos), []);
@@ -130,6 +135,7 @@
 				document.querySelector('#loader').style.display = 'none';
 				return;
 			}
+
 			faceCanvas.render(positionBufferData);
 		}
 	}
@@ -138,13 +144,13 @@
 			loaderMsg.textContent = 'Load webcam';
 			const stream = await navigator.mediaDevices.getUserMedia({
 				video: true,
-				audio: false
+				audio: false,
 			});
 			webcam.srcObject = stream;
 			await new Promise(function (res) {
 				webcam.onloadedmetadata = function () {
-					w = webcam.videoWidth;
-					h = webcam.videoHeight;
+					w = 1280;
+					h = 720;
 					res();
 				}
 			});
