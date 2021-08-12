@@ -106,7 +106,7 @@
 	}
 	toggleBtn.addEventListener('click', toggleWebcamVisibility);
 	const webcam = document.querySelector('#webcam');
-	let model, faceCanvas, w, h;
+	let model, faceCanvas, w = 1280, h = 720;
 	const loaderMsg = document.querySelector('#loaderMsg');
 
 	var artist = document.querySelector('#artist');
@@ -115,11 +115,12 @@
 		requestAnimationFrame(renderPredictions);
 		loaderMsg.textContent = 'Search face';
 		const predictions = await model.estimateFaces(webcam);
-		const baseCanvas = document.querySelector("#baseCanvas");
-		baseCanvas.width = 1280;
-		baseCanvas.height = 720;
-		const base_ctx = baseCanvas.getContext('2d');
-		base_ctx.drawImage(webcam, 0, 0, 1280, 720);
+
+		// const baseCanvas = document.querySelector("#baseCanvas");
+		// baseCanvas.width = 1280;
+		// baseCanvas.height = 720;
+		// const base_ctx = baseCanvas.getContext('2d');
+		// base_ctx.drawImage(webcam, 0, 0, 1280, 720);
 
 		if (predictions.length > 0) {
 			const positionBufferData = predictions[0].scaledMesh.reduce((acc, pos) => acc.concat(pos), []);
@@ -127,8 +128,8 @@
 				const props = {
 					id: 'faceCanvas',
 					textureFilePath: entries[0].entry,
-					w,
-					h
+					w: 1280,
+					h: 720
 				}
 				faceCanvas = new FacePaint(props);
 				updateTexture(flkty.selectedIndex);

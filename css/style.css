@@ -58,10 +58,10 @@ body {
 #webcam.visible + #background {
   opacity: 0;
 }
-/* 
+
 #webcam.visible ~ #faceCanvas {
   mix-blend-mode: multiply;
-} */
+}
 
 #faceCanvas {
   /* opacity: 0.6; */

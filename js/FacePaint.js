@@ -120,18 +120,18 @@ class FacePaint {
 		// console.log('imgData', imgData)
 		// var img = new Image();
 		// img.src = imgData;
-		var gl = this._renderer.getContext();
-		var pixels = new Uint8Array(this._w * this._h * 4);
-		gl.readPixels(0, 0, this._w, this._h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-		console.log(pixels.length); // Uint8Array
-		const srcImageData = toImageData(pixels, this._w, this._h);
+		// var gl = this._renderer.getContext();
+		// var pixels = new Uint8Array(this._w * this._h * 4);
+		// gl.readPixels(0, 0, this._w, this._h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+		// console.log(pixels.length); // Uint8Array
+		// const srcImageData = toImageData(pixels, this._w, this._h);
 
-		blendImages({
-			srcImageData, base_size: {
-				width: this._w,
-				height: this._h
-			}
-		});
+		// blendImages({
+		// 	srcImageData, base_size: {
+		// 		width: this._w,
+		// 		height: this._h
+		// 	}
+		// });
 	}
 
 	constructor({
@@ -206,69 +206,69 @@ const blendImages = ({
 	const result_ctx = resultCanvas.getContext('2d');
 	var result_pixels = base_pixels;//result_ctx.getImageData(0, 0, base_size.width, base_size.height);
 
-	console.log('base_pixels.data.length', base_pixels.data.length)
-	console.log('src_pixels.data.length', src_pixels.data.length)
-	console.log('base_pixels', base_pixels)
-	console.log('src_pixels', src_pixels)
-	console.log('result_pixels', result_pixels)
+	// console.log('base_pixels.data.length', base_pixels.data.length)
+	// console.log('src_pixels.data.length', src_pixels.data.length)
+	// console.log('base_pixels', base_pixels)
+	// console.log('src_pixels', src_pixels)
+	// console.log('result_pixels', result_pixels)
 
-	var dx, absx, previous_epsilon = 1.0;
-	var cnt = 0;
-	var blend_position_offset = { x: 0, y: 0 };
-	var is_mixing_gradients = false;
+	// var dx, absx, previous_epsilon = 1.0;
+	// var cnt = 0;
+	// var blend_position_offset = { x: 0, y: 0 };
+	// var is_mixing_gradients = false;
 
-	do {
-		dx = 0; absx = 0;
-		for (var y = 1; y < base_size.height - 1; y++) {
-			for (var x = 1; x < base_size.width - 1; x++) {
-				// p is current pixel
-				// rgba r=p+0, g=p+1, b=p+2, a=p+3
-				var p = (y * base_size.width + x) * 4;
+	// do {
+	// 	dx = 0; absx = 0;
+	// 	for (var y = 1; y < base_size.height - 1; y++) {
+	// 		for (var x = 1; x < base_size.width - 1; x++) {
+	// 			// p is current pixel
+	// 			// rgba r=p+0, g=p+1, b=p+2, a=p+3
+	// 			var p = (y * base_size.width + x) * 4;
 
-				// Mask area is painted with a opacity
-				if (mask_pixels.data[p + 3] == 255) {
-					var p_offseted = p + 4 * (blend_position_offset.y * base_size.width + blend_position_offset.x);
+	// 			// Mask area is painted with a opacity
+	// 			if (mask_pixels.data[p + 3] == 255) {
+	// 				var p_offseted = p + 4 * (blend_position_offset.y * base_size.width + blend_position_offset.x);
 
-					// q is array of connected neighbors
-					var q = [((y - 1) * base_size.width + x) * 4, ((y + 1) * base_size.width + x) * 4,
-					(y * base_size.width + (x - 1)) * 4, (y * base_size.width + (x + 1)) * 4];
-					var num_neighbors = q.length;
+	// 				// q is array of connected neighbors
+	// 				var q = [((y - 1) * base_size.width + x) * 4, ((y + 1) * base_size.width + x) * 4,
+	// 				(y * base_size.width + (x - 1)) * 4, (y * base_size.width + (x + 1)) * 4];
+	// 				var num_neighbors = q.length;
 
-					for (var rgb = 0; rgb < 3; rgb++) {
-						var sum_fq = 0;
-						var sum_vpq = 0;
-						var sum_boundary = 0;
+	// 				for (var rgb = 0; rgb < 3; rgb++) {
+	// 					var sum_fq = 0;
+	// 					var sum_vpq = 0;
+	// 					var sum_boundary = 0;
 
-						for (var i = 0; i < num_neighbors; i++) {
-							var q_offseted = q[i] + 4 * (blend_position_offset.y * base_size.width + blend_position_offset.x);
+	// 					for (var i = 0; i < num_neighbors; i++) {
+	// 						var q_offseted = q[i] + 4 * (blend_position_offset.y * base_size.width + blend_position_offset.x);
 
-							if (mask_pixels.data[q[i] + 0] == 0 && mask_pixels.data[q[i] + 1] == 255 &&
-								mask_pixels.data[q[i] + 2] == 0 && mask_pixels.data[q[i] + 3] == 255) {
-								sum_fq += result_pixels.data[q_offseted + rgb];
-							} else {
-								sum_boundary += base_pixels.data[q_offseted + rgb];
-							}
+	// 						if (mask_pixels.data[q[i] + 0] == 0 && mask_pixels.data[q[i] + 1] == 255 &&
+	// 							mask_pixels.data[q[i] + 2] == 0 && mask_pixels.data[q[i] + 3] == 255) {
+	// 							sum_fq += result_pixels.data[q_offseted + rgb];
+	// 						} else {
+	// 							sum_boundary += base_pixels.data[q_offseted + rgb];
+	// 						}
 
-							if (is_mixing_gradients && Math.abs(base_pixels.data[p_offseted + rgb] - base_pixels.data[q_offseted + rgb]) >
-								Math.abs(src_pixels.data[p + rgb] - src_pixels.data[q[i] + rgb])) {
-								sum_vpq += base_pixels.data[p_offseted + rgb] - base_pixels.data[q_offseted + rgb];
-							} else {
-								sum_vpq += src_pixels.data[p + rgb] - src_pixels.data[q[i] + rgb];
-							}
-						}
-						var new_value = (sum_fq + sum_vpq + sum_boundary) / num_neighbors;
-						dx += Math.abs(new_value - result_pixels.data[p_offseted + rgb]);
-						absx += Math.abs(new_value);
-						result_pixels.data[p_offseted + rgb] = new_value;
-					}
-				}
-			}
-		}
-		cnt++;
-		var epsilon = dx / absx;
-		if (!epsilon || previous_epsilon - epsilon === 0) break; // convergence
-		else previous_epsilon = epsilon;
-	} while (true);
+	// 						if (is_mixing_gradients && Math.abs(base_pixels.data[p_offseted + rgb] - base_pixels.data[q_offseted + rgb]) >
+	// 							Math.abs(src_pixels.data[p + rgb] - src_pixels.data[q[i] + rgb])) {
+	// 							sum_vpq += base_pixels.data[p_offseted + rgb] - base_pixels.data[q_offseted + rgb];
+	// 						} else {
+	// 							sum_vpq += src_pixels.data[p + rgb] - src_pixels.data[q[i] + rgb];
+	// 						}
+	// 					}
+	// 					var new_value = (sum_fq + sum_vpq + sum_boundary) / num_neighbors;
+	// 					dx += Math.abs(new_value - result_pixels.data[p_offseted + rgb]);
+	// 					absx += Math.abs(new_value);
+	// 					result_pixels.data[p_offseted + rgb] = new_value;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// 	cnt++;
+	// 	var epsilon = dx / absx;
+	// 	if (!epsilon || previous_epsilon - epsilon === 0) break; // convergence
+	// 	else previous_epsilon = epsilon;
+	// } while (true);
 	// // console.log('final result_pixels', result_pixels)
 	result_ctx.putImageData(result_pixels, 0, 0);
 	// // const resultCanvas = document.querySelector('#resultCanvas');
