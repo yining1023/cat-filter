@@ -1,5 +1,4 @@
-html,
-body {
+html, body {
   width: 100vw;
   height: 100vh;
   height: -webkit-fill-available;
@@ -35,14 +34,6 @@ body {
   position: absolute;
 }
 
-#baseCanvas,
-#resultCanvas {
-  position: absolute;
-  transform: scaleX(-1);
-  /* width: 1280px;
-  height: 720px; */
-}
-
 #webcam {
   opacity: 0;
   transform: scaleX(-1);
@@ -66,19 +57,19 @@ body {
   mix-blend-mode: multiply;
 } */
 
-#faceCanvas {
-  /* opacity: 0.6; */
-  opacity: 1;
+#faceCanvas,
+#baseCanvas,
+#resultCanvas {
   transform: scaleX(-1);
 }
 
 #loader {
-  background: rgba(255, 255, 255, 0.5);
-  mix-blend-mode: screen;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+ background: rgba(255,255,255,0.5);
+ mix-blend-mode: screen;
+ z-index: 100;
+ display: flex;
+ align-items: center;
+ justify-content: center;
 }
 
 #loader > svg {
@@ -111,8 +102,10 @@ body {
   border: none;
   border-radius: 1rem;
   height: 2rem;
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
-    0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 
+    0 2px 2px 0 rgba(0,0,0,0.14), 
+    0 3px 1px -2px rgba(0,0,0,0.12), 
+    0 1px 5px 0 rgba(0,0,0,0.2);
   display: flex;
   font-size: 16px;
   align-items: center;
@@ -161,14 +154,18 @@ body {
 #visibilityToggle:focus {
   width: 13rem;
   width: fill-available;
-  box-shadow: 0 3px 3px 0 rgba(0, 0, 0, 0.14), 0 1px 7px 0 rgba(0, 0, 0, 0.12),
-    0 3px 1px -1px rgba(0, 0, 0, 0.2);
+  box-shadow: 
+    0 3px 3px 0 rgba(0,0,0,0.14), 
+    0 1px 7px 0 rgba(0,0,0,0.12), 
+    0 3px 1px -1px rgba(0,0,0,0.2);
 }
 
 #artist:hover,
 #artist:focus {
-  box-shadow: 0 3px 3px 0 rgba(0, 0, 0, 0.14), 0 1px 7px 0 rgba(0, 0, 0, 0.12),
-    0 3px 1px -1px rgba(0, 0, 0, 0.2);
+  box-shadow: 
+    0 3px 3px 0 rgba(0,0,0,0.14), 
+    0 1px 7px 0 rgba(0,0,0,0.12), 
+    0 3px 1px -1px rgba(0,0,0,0.2);
 }
 
 #artist {
@@ -257,8 +254,11 @@ body {
   font-weight: bold;
 }
 .gallery-types > input:not(:checked) + label {
-  text-shadow: 0 0 1px #232323, -1px 0 1px #232323, 0 -1px 1px #232323,
-    1px 0 1px #232323, 0 1px 1px #232323;
+  text-shadow: 0    0   1px #232323,
+              -1px  0   1px #232323,
+               0   -1px 1px #232323,
+               1px  0   1px #232323,
+               0    1px 1px #232323;
 }
 .gallery-types label:last-of-type:before {
   content: "";

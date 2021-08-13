@@ -6,14 +6,7 @@
 		url: 'https://en.wikipedia.org/wiki/Jamini_Roy#Style',
 		entry: './assets/cat2.jpg',
 		background: '#fff'
-	},
-	{
-		handle: 'Default',
-		url: 'https://en.wikipedia.org/wiki/Jamini_Roy#Style',
-		entry: './assets/mesh.jpg',
-		background: 'hsl(198, 5%, 50%)'
-	},
-	{
+	}, {
 		handle: 'Chhau Mask',
 		url: 'https://en.wikipedia.org/wiki/Chhau_mask',
 		entry: './assets/chhau-mask.jpg',
@@ -112,15 +105,9 @@
 	var artist = document.querySelector('#artist');
 
 	async function renderPredictions(t) {
-		requestAnimationFrame(renderPredictions);
+    requestAnimationFrame(renderPredictions);
 		loaderMsg.textContent = 'Search face';
 		const predictions = await model.estimateFaces(webcam);
-		const baseCanvas = document.querySelector("#baseCanvas");
-		baseCanvas.width = window.innerWidth;
-		baseCanvas.height = window.innerHeight;
-
-		const base_ctx = baseCanvas.getContext('2d');
-		base_ctx.drawImage(webcam, 0, 0, window.innerWidth, window.innerHeight);
 
 		if (predictions.length > 0) {
 			const positionBufferData = predictions[0].scaledMesh.reduce((acc, pos) => acc.concat(pos), []);
@@ -136,7 +123,6 @@
 				document.querySelector('#loader').style.display = 'none';
 				return;
 			}
-
 			faceCanvas.render(positionBufferData);
 		}
 	}
@@ -145,23 +131,32 @@
 			loaderMsg.textContent = 'Load webcam';
 			const stream = await navigator.mediaDevices.getUserMedia({
 				video: true,
-				audio: false,
+				audio: false
 			});
 			webcam.srcObject = stream;
 			await new Promise(function (res) {
 				webcam.onloadedmetadata = function () {
-					w = window.innerWidth;
-					h = window.innerHeight;
+					w = webcam.videoWidth;
+					h = webcam.videoHeight;
 					res();
 				}
 			});
 
+			const baseCanvas = document.querySelector("#baseCanvas");
+			baseCanvas.width = window.innerWidth;
+			baseCanvas.height = window.innerHeight;
+			const resultCanvas = document.querySelector('#resultCanvas');
+			resultCanvas.width = window.innerWidth;
+			resultCanvas.height = window.innerHeight;
+			const faceCanvas = document.querySelector('#faceCanvas');
+			faceCanvas.width = window.innerWidth;
+			faceCanvas.height = window.innerHeight;
+			
 			webcam.height = h;
 			webcam.width = w;
 			webcam.setAttribute('autoplay', true);
 			webcam.setAttribute('muted', true);
 			webcam.setAttribute('playsinline', true);
-			webcam.setAttribute('visibility', 'hidden');
 			webcam.play();
 			loaderMsg.textContent = 'Load model';
 			// Load the MediaPipe facemesh model.
