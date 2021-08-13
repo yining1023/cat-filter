@@ -25,9 +25,12 @@ body {
 
 #faceCanvas,
 #baseCanvas,
+#resultCanvas,
 #webcam,
 #background,
 #loader {
+  width: 100vw !important;
+  height: 100vh !important;
   object-fit: cover;
   position: absolute;
 }

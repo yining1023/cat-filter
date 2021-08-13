@@ -63,6 +63,85 @@ class FacePaint {
 	}
 
 	_addMaterial() {
+
+		this._fragShader = `
+			#include <common>
+
+			uniform vec3      iResolution;           // viewport resolution (in pixels)
+			uniform float     iTime;                 // shader playback time (in seconds)
+			uniform float     iTimeDelta;            // render time (in seconds)
+			uniform int       iFrame;                // shader playback frame
+			uniform float     iChannelTime[4];       // channel playback time (in seconds)
+			uniform vec3      iChannelResolution[4]; // channel resolution (in pixels)
+			uniform sampler2D baseTexture;			 // base image
+			uniform sampler2D srcTexture;			 // src image, mask is defined by alpha channel of src image
+			
+			uniform vec4      iDate;                 // (year, month, day, time in seconds)
+
+			vec3 tap(sampler2D tex, vec2 uv) { return texture(tex, uv).rgb; }
+
+			bool isInitialization() {
+				vec2 lastResolution = texture(iChannel1, vec2(0.5) / iResolution.xy).yz;   
+				return any(notEqual(lastResolution, iResolution.xy));
+			}
+
+			bool isMasked(vec2 uv) {
+				return texture(srcTexture, uv).w > 0.5; 
+			}
+
+			void mainImage( out vec4 fragColor, in vec2 fragCoord )
+			{
+				vec2 uv = fragCoord.xy / iResolution.xy;
+				fragColor.a = 1.0; 
+				
+				mixingGradients = texture(iChannel1, vec2(1.5) / iResolution.xy).y;  
+				float frameReset = texture(iChannel1, vec2(1.5) / iResolution.xy).z;  
+				
+				// init: resolution does not match / current frame is black / mode changes
+				if (isInitialization() || RES(vec2(1.0)).r < EPS || float(iFrame - 2) < frameReset) {
+					fragColor.rgb = BASE(uv);
+					return; 
+				}
+				
+				vec2 p = uv; 
+				//if (isMasked(p) && frameReset + MAX_ITERATIONS > float(iFrame)) {
+				if (isMasked(p)) {
+					vec3 col = vec3(0.0); 
+					float convergence = 0.0; 
+					
+					neighbors[0] = uv + vec2(-1.0 / iChannelResolution[3].x, 0.0); 
+					neighbors[1] = uv + vec2( 1.0 / iChannelResolution[3].x, 0.0); 
+					neighbors[2] = uv + vec2(0.0, -1.0 / iChannelResolution[3].y); 
+					neighbors[3] = uv + vec2(0.0,  1.0 / iChannelResolution[3].y);
+					
+					for (int i = 0; i < NUM_NEIGHBORS; ++i) {
+						vec2 q = neighbors[i];
+						col += isMasked(q) ? RES(q) : BASE(q);
+						vec3 srcGrad = SRC(p) - SRC(q);
+						
+						if (mixingGradients > 0.5) {
+							vec3 baseGrad = BASE(p) - BASE(q);
+							col.r += (abs(baseGrad.r) > abs(srcGrad.r)) ? baseGrad.r : srcGrad.r;
+							col.g += (abs(baseGrad.g) > abs(srcGrad.g)) ? baseGrad.g : srcGrad.g;
+							col.b += (abs(baseGrad.b) > abs(srcGrad.b)) ? baseGrad.b : srcGrad.b;
+						} else {
+							col += srcGrad;     
+						}
+					}     
+					col /= float(NUM_NEIGHBORS); 
+					convergence += distance(col, RES(p)); // TODO: converge
+					fragColor.rgb = col;
+					return; 
+				}
+							
+				fragColor.rgb = RES(uv); 
+			}
+			void main() {
+				mainImage(gl_FragColor, gl_FragCoord.xy);
+			}
+			`;
+
+
 		this._textureLoader = new THREE.TextureLoader();
 		const texture = this._textureLoader.load(this._textureFilePath);
 		// set the "color space" of the texture
@@ -72,6 +151,21 @@ class FacePaint {
 		texture.anisotropy = 16;
 		const alpha = 0.4;
 		const beta = 0.5;
+
+		this._material = new THREE.ShaderMaterial( {
+
+			uniforms: uniforms,
+			vertexShader: document.getElementById('vertexshader').textContent,
+			fragmentShader: document.getElementById('fragmentshader').textContent,
+
+			blending: THREE.AdditiveBlending,
+			depthTest: false,
+			transparent: true,
+			vertexColors: true
+
+		} );
+
+
 		this._material = new THREE.MeshPhongMaterial({
 			map: texture,
 			color: new THREE.Color(0xffffff),
@@ -117,10 +211,9 @@ class FacePaint {
 
 		this._renderer.render(this._scene, this._camera);
 
-		var gl = this._renderer.getContext();
-		var pixels = new Uint8Array(this._w * this._h * 4);
-		gl.readPixels(0, 0, this._w, this._h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-		const srcImageData = toImageData(pixels, this._w, this._h);
+		const srcImageData = new Uint8ClampedArray(this._w * this._h * 4);
+		this._renderer.readRenderTargetPixels(
+			this._renderTarget, 0, 0, this._w, this._h, srcImageData);
 
 		blendImages({
 			srcImageData, base_size: {
@@ -150,6 +243,15 @@ class FacePaint {
 		this._halfH = h * 0.5;
 		this._textureFilePath = textureFilePath;
 		this._setupScene();
+
+		this._renderTarget = new THREE.WebGLRenderTarget(w, h);
+		this._renderer.setRenderTarget( this._renderTarget  );
+
+		console.log('*** canvas size: ', this._w, this._h);
+
+		// const canvas = this._renderer.domElement;
+		// this._camera.aspect = canvas.clientWidth / canvas.clientHeight;
+		// this._camera.updateProjectionMatrix();
 	}
 }
 
@@ -185,14 +287,8 @@ const blendImages = ({
 	base_size
 }) => {
 	const videoEl = document.querySelector('#webcam');
-	// const baseCanvas = document.createElement("canvas");
-	// baseCanvas.width = 1280;
-	// baseCanvas.height = 720;
 	const baseCanvas = document.querySelector("#baseCanvas");
 	const base_ctx = baseCanvas.getContext('2d');
-	// base_ctx.drawImage(videoEl, 0, 0, base_size.width, base_size.height);
-	// console.log('base', baseCanvas.toDataURL())
-
 
 	var base_pixels = base_ctx.getImageData(0, 0, base_size.width, base_size.height);
 	var src_pixels = srcImageData; //src_ctx.getImageData(0, 0, base_size.width, base_size.height);
@@ -204,10 +300,11 @@ const blendImages = ({
 	resultCanvas.width = baseCanvas.width;
 
 	const result_ctx = resultCanvas.getContext('2d');
+	result_ctx.putImageData(srcImageData, 0, 0);
 	var result_pixels = base_pixels;//result_ctx.getImageData(0, 0, base_size.width, base_size.height);
 
 	console.log('base_pixels.data.length', base_pixels.data.length)
-	console.log('src_pixels.data.length', src_pixels.data.length)
+	console.log('src_pixels.length', src_pixels.length)
 	console.log('base_pixels', base_pixels)
 	console.log('src_pixels', src_pixels)
 	console.log('result_pixels', result_pixels)
@@ -226,7 +323,7 @@ const blendImages = ({
 				var p = (y * base_size.width + x) * 4;
 
 				// Mask area is painted with a opacity
-				if (mask_pixels.data[p + 3] == 255) {
+				if (mask_pixels[p + 3] == 255) {
 					var p_offseted = p + 4 * (blend_position_offset.y * base_size.width + blend_position_offset.x);
 
 					// q is array of connected neighbors
@@ -242,18 +339,17 @@ const blendImages = ({
 						for (var i = 0; i < num_neighbors; i++) {
 							var q_offseted = q[i] + 4 * (blend_position_offset.y * base_size.width + blend_position_offset.x);
 
-							if (mask_pixels.data[q[i] + 0] == 0 && mask_pixels.data[q[i] + 1] == 255 &&
-								mask_pixels.data[q[i] + 2] == 0 && mask_pixels.data[q[i] + 3] == 255) {
+							if (mask_pixels[q[i] + 3] == 255) {
 								sum_fq += result_pixels.data[q_offseted + rgb];
 							} else {
 								sum_boundary += base_pixels.data[q_offseted + rgb];
 							}
 
 							if (is_mixing_gradients && Math.abs(base_pixels.data[p_offseted + rgb] - base_pixels.data[q_offseted + rgb]) >
-								Math.abs(src_pixels.data[p + rgb] - src_pixels.data[q[i] + rgb])) {
+								Math.abs(src_pixels[p + rgb] - src_pixels[q[i] + rgb])) {
 								sum_vpq += base_pixels.data[p_offseted + rgb] - base_pixels.data[q_offseted + rgb];
 							} else {
-								sum_vpq += src_pixels.data[p + rgb] - src_pixels.data[q[i] + rgb];
+								sum_vpq += src_pixels[p + rgb] - src_pixels[q[i] + rgb];
 							}
 						}
 						var new_value = (sum_fq + sum_vpq + sum_boundary) / num_neighbors;
@@ -269,11 +365,7 @@ const blendImages = ({
 		if (!epsilon || previous_epsilon - epsilon === 0) break; // convergence
 		else previous_epsilon = epsilon;
 	} while (true);
-	// // console.log('final result_pixels', result_pixels)
 	result_ctx.putImageData(result_pixels, 0, 0);
-	// // const resultCanvas = document.querySelector('#resultCanvas');
-	// // const result = resultCanvas.toDataURL();
-	// // console.log('result', result)
 }
 
 const convertURIToImageData = (URI) => {
